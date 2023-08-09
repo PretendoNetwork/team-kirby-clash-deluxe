@@ -1,8 +1,8 @@
 package nex_datastore
 
 import (
-	"github.com/PretendoNetwork/team-kirby-clash-deluxe-secure/database"
-	"github.com/PretendoNetwork/team-kirby-clash-deluxe-secure/globals"
+	"github.com/PretendoNetwork/team-kirby-clash-deluxe/database"
+	"github.com/PretendoNetwork/team-kirby-clash-deluxe/globals"
 
 	"github.com/PretendoNetwork/nex-go"
 	datastore "github.com/PretendoNetwork/nex-protocols-go/datastore"
@@ -41,7 +41,7 @@ func ChangeMeta(err error, client *nex.Client, callID uint32, param *datastore_t
 	responsePacket.AddFlag(nex.FlagNeedsAck)
 	responsePacket.AddFlag(nex.FlagReliable)
 
-	globals.NEXServer.Send(responsePacket)
+	globals.SecureServer.Send(responsePacket)
 
 	return 0
 }

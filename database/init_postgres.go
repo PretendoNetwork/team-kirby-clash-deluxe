@@ -1,6 +1,6 @@
 package database
 
-import "github.com/PretendoNetwork/team-kirby-clash-deluxe-secure/globals"
+import "github.com/PretendoNetwork/team-kirby-clash-deluxe/globals"
 
 func initPostgres() {
 	var err error

@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/PretendoNetwork/nex-go"
-	"github.com/PretendoNetwork/team-kirby-clash-deluxe-secure/globals"
-	"github.com/PretendoNetwork/team-kirby-clash-deluxe-secure/types"
+	"github.com/PretendoNetwork/team-kirby-clash-deluxe/globals"
+	"github.com/PretendoNetwork/team-kirby-clash-deluxe/types"
 	"github.com/lib/pq"
 )
 

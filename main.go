@@ -3,16 +3,17 @@ package main
 import (
 	"sync"
 
-	"github.com/PretendoNetwork/team-kirby-clash-deluxe-secure/nex"
+	"github.com/PretendoNetwork/team-kirby-clash-deluxe/nex"
 )
 
 var wg sync.WaitGroup
 
 func main() {
-	wg.Add(1)
+	wg.Add(2)
 
 	// TODO - Add gRPC server
-	go nex.StartNEXServer()
+	go nex.StartAuthenticationServer()
+	go nex.StartSecureServer()
 
 	wg.Wait()
 }

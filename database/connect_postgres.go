@@ -6,15 +6,15 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"github.com/PretendoNetwork/team-kirby-clash-deluxe-secure/globals"
+	"github.com/PretendoNetwork/team-kirby-clash-deluxe/globals"
 )
 
 var Postgres *sql.DB
 
-func connectPostgres() {
+func ConnectPostgres() {
 	var err error
 
-	Postgres, err = sql.Open("postgres", os.Getenv("POSTGRES_URI"))
+	Postgres, err = sql.Open("postgres", os.Getenv("PN_TKCD_POSTGRES_URI"))
 	if err != nil {
 		globals.Logger.Critical(err.Error())
 	}

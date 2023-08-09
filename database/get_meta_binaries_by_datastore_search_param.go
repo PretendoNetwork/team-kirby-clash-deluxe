@@ -6,8 +6,8 @@ import (
 
 	"github.com/PretendoNetwork/nex-go"
 	datastore_types "github.com/PretendoNetwork/nex-protocols-go/datastore/types"
-	"github.com/PretendoNetwork/team-kirby-clash-deluxe-secure/globals"
-	"github.com/PretendoNetwork/team-kirby-clash-deluxe-secure/types"
+	"github.com/PretendoNetwork/team-kirby-clash-deluxe/globals"
+	"github.com/PretendoNetwork/team-kirby-clash-deluxe/types"
 	"github.com/lib/pq"
 )
 

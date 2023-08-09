@@ -1,8 +1,8 @@
 package nex_datastore
 
 import (
-	"github.com/PretendoNetwork/team-kirby-clash-deluxe-secure/database"
-	"github.com/PretendoNetwork/team-kirby-clash-deluxe-secure/globals"
+	"github.com/PretendoNetwork/team-kirby-clash-deluxe/database"
+	"github.com/PretendoNetwork/team-kirby-clash-deluxe/globals"
 
 	"github.com/PretendoNetwork/nex-go"
 	datastore "github.com/PretendoNetwork/nex-protocols-go/datastore"
@@ -29,7 +29,7 @@ func PostMetaBinary(err error, client *nex.Client, callID uint32, param *datasto
 
 	dataID := database.InsertMetaBinaryByDataStorePreparePostParamWithOwnerPID(param, client.PID())
 
-	rmcResponseStream := nex.NewStreamOut(globals.NEXServer)
+	rmcResponseStream := nex.NewStreamOut(globals.SecureServer)
 
 	rmcResponseStream.WriteUInt64LE(uint64(dataID))
 
@@ -51,7 +51,7 @@ func PostMetaBinary(err error, client *nex.Client, callID uint32, param *datasto
 	responsePacket.AddFlag(nex.FlagNeedsAck)
 	responsePacket.AddFlag(nex.FlagReliable)
 
-	globals.NEXServer.Send(responsePacket)
+	globals.SecureServer.Send(responsePacket)
 
 	return 0
 }

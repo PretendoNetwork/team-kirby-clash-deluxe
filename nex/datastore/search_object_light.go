@@ -1,9 +1,9 @@
 package nex_datastore
 
 import (
-	"github.com/PretendoNetwork/team-kirby-clash-deluxe-secure/database"
-	"github.com/PretendoNetwork/team-kirby-clash-deluxe-secure/globals"
-	"github.com/PretendoNetwork/team-kirby-clash-deluxe-secure/types"
+	"github.com/PretendoNetwork/team-kirby-clash-deluxe/database"
+	"github.com/PretendoNetwork/team-kirby-clash-deluxe/globals"
+	"github.com/PretendoNetwork/team-kirby-clash-deluxe/types"
 
 	"github.com/PretendoNetwork/nex-go"
 	datastore "github.com/PretendoNetwork/nex-protocols-go/datastore"
@@ -68,7 +68,7 @@ func SearchObjectLight(err error, client *nex.Client, callID uint32, param *data
 		pSearchResult.Result = append(pSearchResult.Result, result)
 	}
 
-	rmcResponseStream := nex.NewStreamOut(globals.NEXServer)
+	rmcResponseStream := nex.NewStreamOut(globals.SecureServer)
 
 	rmcResponseStream.WriteStructure(pSearchResult)
 
@@ -90,7 +90,7 @@ func SearchObjectLight(err error, client *nex.Client, callID uint32, param *data
 	responsePacket.AddFlag(nex.FlagNeedsAck)
 	responsePacket.AddFlag(nex.FlagReliable)
 
-	globals.NEXServer.Send(responsePacket)
+	globals.SecureServer.Send(responsePacket)
 
 	return 0
 }
