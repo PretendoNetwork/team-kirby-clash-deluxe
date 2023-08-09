@@ -5,12 +5,25 @@ import (
 	"github.com/PretendoNetwork/team-kirby-clash-deluxe-secure/globals"
 
 	"github.com/PretendoNetwork/nex-go"
-	"github.com/PretendoNetwork/nex-protocols-go/datastore"
+	datastore "github.com/PretendoNetwork/nex-protocols-go/datastore"
+	datastore_types "github.com/PretendoNetwork/nex-protocols-go/datastore/types"
 )
 
-func ChangeMeta(err error, client *nex.Client, callID uint32, param *datastore.DataStoreChangeMetaParam) {
-	// TODO - Check error
-	_ = database.UpdateMetaBinaryByDataStoreChangeMetaParam(param)
+func ChangeMeta(err error, client *nex.Client, callID uint32, param *datastore_types.DataStoreChangeMetaParam) uint32 {
+	if err != nil {
+		globals.Logger.Error(err.Error())
+		return nex.Errors.DataStore.InvalidArgument
+	}
+
+	if validateErr := database.ValidateMetaBinaryByOwnerPID(uint32(param.DataID), client.PID()); validateErr != 0 {
+		return validateErr
+	}
+
+	err = database.UpdateMetaBinaryByDataStoreChangeMetaParam(param)
+	if err != nil {
+		globals.Logger.Critical(err.Error())
+		return nex.Errors.DataStore.Unknown
+	}
 
 	rmcResponse := nex.NewRMCResponse(datastore.ProtocolID, callID)
 	rmcResponse.SetSuccess(datastore.MethodChangeMeta, nil)
@@ -29,4 +42,6 @@ func ChangeMeta(err error, client *nex.Client, callID uint32, param *datastore.D
 	responsePacket.AddFlag(nex.FlagReliable)
 
 	globals.NEXServer.Send(responsePacket)
+
+	return 0
 }
