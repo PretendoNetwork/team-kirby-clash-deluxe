@@ -10,7 +10,7 @@ import (
 func ValidateMetaBinaryByOwnerPID(dataID uint32, pid uint32) uint32 {
 	var ownerPID uint32
 
-	err := Postgres.QueryRow(`SELECT owner_pid FROM meta_binaries WHERE data_id=$1`, dataID).Scan(ownerPID)
+	err := Postgres.QueryRow(`SELECT owner_pid FROM meta_binaries WHERE data_id=$1`, dataID).Scan(&ownerPID)
 
 	if err == sql.ErrNoRows {
 		return nex.Errors.DataStore.NotFound
