@@ -24,10 +24,10 @@ func StartSecureServer() {
 	globals.SecureServer.On("Data", func(packet *nex.PacketV1) {
 		request := packet.RMCRequest()
 
-		fmt.Println("== TKCD - Secure ==")
+		fmt.Println("=== TKCD - Secure ===")
 		fmt.Printf("Protocol ID: %#v\n", request.ProtocolID())
 		fmt.Printf("Method ID: %#v\n", request.MethodID())
-		fmt.Println("======================")
+		fmt.Println("=====================")
 	})
 
 	registerCommonSecureServerProtocols()

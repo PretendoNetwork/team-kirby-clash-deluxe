@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-var Logger = plogger.NewLogger()
+var Logger *plogger.Logger
 var KerberosPassword = "password" // * Default password
 var AuthenticationServer *nex.Server
 var SecureServer *nex.Server

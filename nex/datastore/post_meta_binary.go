@@ -27,7 +27,11 @@ func PostMetaBinary(err error, client *nex.Client, callID uint32, param *datasto
 		}
 	}
 
-	dataID := database.InsertMetaBinaryByDataStorePreparePostParamWithOwnerPID(param, client.PID())
+	dataID, err := database.InsertMetaBinaryByDataStorePreparePostParamWithOwnerPID(param, client.PID())
+	if err != nil {
+		globals.Logger.Critical(err.Error())
+		return nex.Errors.DataStore.Unknown
+	}
 
 	rmcResponseStream := nex.NewStreamOut(globals.SecureServer)
 
