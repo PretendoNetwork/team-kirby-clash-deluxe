@@ -1,86 +1,52 @@
 package nex_service_item_team_kirby_clash_deluxe
 
 import (
+	common_globals "github.com/PretendoNetwork/nex-protocols-common-go/v2/globals"
 	"github.com/PretendoNetwork/team-kirby-clash-deluxe/globals"
 
-	"github.com/PretendoNetwork/nex-go"
-	// service_item_team_kirby_clash_deluxe "github.com/PretendoNetwork/nex-protocols-go/service-item/team-kirby-clash-deluxe"
-	service_item_team_kirby_clash_deluxe_types "github.com/PretendoNetwork/nex-protocols-go/service-item/team-kirby-clash-deluxe/types"
-	// notifications "github.com/PretendoNetwork/nex-protocols-go/notifications"
-	// notifications_types "github.com/PretendoNetwork/nex-protocols-go/notifications/types"
+	"github.com/PretendoNetwork/nex-go/v2"
+	"github.com/PretendoNetwork/nex-go/v2/types"
+	notifications "github.com/PretendoNetwork/nex-protocols-go/v2/notifications"
+	notifications_types "github.com/PretendoNetwork/nex-protocols-go/v2/notifications/types"
+	service_item_team_kirby_clash_deluxe "github.com/PretendoNetwork/nex-protocols-go/v2/service-item/team-kirby-clash-deluxe"
+	service_item_team_kirby_clash_deluxe_types "github.com/PretendoNetwork/nex-protocols-go/v2/service-item/team-kirby-clash-deluxe/types"
 )
 
-func ListServiceItemRequest(err error, client *nex.Client, callID uint32, listServiceItemParam *service_item_team_kirby_clash_deluxe_types.ServiceItemListServiceItemParam) uint32 {
+func ListServiceItemRequest(err error, packet nex.PacketInterface, callID uint32, listServiceItemParam service_item_team_kirby_clash_deluxe_types.ServiceItemListServiceItemParam) (*nex.RMCMessage, *nex.Error) {
 	if err != nil {
 		globals.Logger.Error(err.Error())
-		return nex.Errors.ServiceItem.InvalidArgument
+		return nil, nex.NewError(nex.ResultCodes.ServiceItem.InvalidArgument, err.Error())
 	}
 
-	return nex.Errors.ServiceItem.Unknown
+	// return nil, nex.NewError(nex.ResultCodes.ServiceItem.Unknown, "Stubbed")
 
-	/* TODO - WHY THIS DOES NOT WORK?
+	connection := packet.Sender()
+	endpoint := connection.Endpoint()
+
 	// * Stubbed
 	var requestID uint32 = 1
 
-	rmcResponseStream := nex.NewStreamOut(globals.SecureServer)
+	rmcResponseStream := nex.NewByteStreamOut(globals.SecureServer.LibraryVersions, globals.SecureServer.ByteStreamSettings)
 
 	rmcResponseStream.WriteUInt32LE(requestID)
 
 	rmcResponseBody := rmcResponseStream.Bytes()
 
-	rmcResponse := nex.NewRMCResponse(service_item_team_kirby_clash_deluxe.ProtocolID, callID)
-	rmcResponse.SetSuccess(service_item_team_kirby_clash_deluxe.MethodListServiceItemRequest, rmcResponseBody)
-
-	rmcResponseBytes := rmcResponse.Bytes()
-
-	responsePacket, _ := nex.NewPacketV1(client, nil)
-
-	responsePacket.SetVersion(1)
-	responsePacket.SetSource(0xA1)
-	responsePacket.SetDestination(0xAF)
-	responsePacket.SetType(nex.DataPacket)
-	responsePacket.SetPayload(rmcResponseBytes)
-
-	responsePacket.AddFlag(nex.FlagNeedsAck)
-	responsePacket.AddFlag(nex.FlagReliable)
-
-	globals.SecureServer.Send(responsePacket)
-
-	rmcMessage := nex.NewRMCRequest()
-	rmcMessage.SetProtocolID(notifications.ProtocolID)
-	rmcMessage.SetCallID(0xffff0000 + callID)
-	rmcMessage.SetMethodID(notifications.MethodProcessNotificationEvent)
+	rmcResponse := nex.NewRMCSuccess(endpoint, rmcResponseBody)
+	rmcResponse.ProtocolID = service_item_team_kirby_clash_deluxe.ProtocolID
+	rmcResponse.MethodID = service_item_team_kirby_clash_deluxe.MethodListServiceItemRequest
+	rmcResponse.CallID = callID
 
 	category := notifications.NotificationCategories.ServiceItemRequestCompleted
 	subtype := notifications.NotificationSubTypes.ServiceItemRequestCompleted.None
 
 	oEvent := notifications_types.NewNotificationEvent()
-	oEvent.PIDSource = client.PID()
-	oEvent.Type = notifications.BuildNotificationType(category, subtype)
-	oEvent.Param1 = requestID
+	oEvent.PIDSource = connection.PID()
+	oEvent.Type = types.NewUInt32(notifications.BuildNotificationType(category, subtype))
+	oEvent.Param1 = types.NewUInt32(requestID)
 	oEvent.Param2 = 1 // * Unknown
 
-	stream := nex.NewStreamOut(globals.SecureServer)
-	oEventBytes := oEvent.Bytes(stream)
-	rmcMessage.SetParameters(oEventBytes)
+	go common_globals.SendNotificationEvent(globals.SecureEndpoint, oEvent, []uint64{uint64(connection.PID())})
 
-	rmcMessageBytes := rmcMessage.Bytes()
-
-	var messagePacket nex.PacketInterface
-
-	messagePacket, _ = nex.NewPacketV1(client, nil)
-
-	messagePacket.SetVersion(1)
-	messagePacket.SetSource(0xA1)
-	messagePacket.SetDestination(0xAF)
-	messagePacket.SetType(nex.DataPacket)
-	messagePacket.SetPayload(rmcMessageBytes)
-
-	messagePacket.AddFlag(nex.FlagNeedsAck)
-	messagePacket.AddFlag(nex.FlagReliable)
-
-	globals.SecureServer.Send(messagePacket)
-
-	return 0
-	*/
+	return rmcResponse, nil
 }

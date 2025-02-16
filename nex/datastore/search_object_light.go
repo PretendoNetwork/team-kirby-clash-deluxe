@@ -5,21 +5,25 @@ import (
 	"github.com/PretendoNetwork/team-kirby-clash-deluxe/globals"
 	"github.com/PretendoNetwork/team-kirby-clash-deluxe/types"
 
-	"github.com/PretendoNetwork/nex-go"
-	datastore "github.com/PretendoNetwork/nex-protocols-go/datastore"
-	datastore_types "github.com/PretendoNetwork/nex-protocols-go/datastore/types"
+	"github.com/PretendoNetwork/nex-go/v2"
+	nex_types "github.com/PretendoNetwork/nex-go/v2/types"
+	datastore "github.com/PretendoNetwork/nex-protocols-go/v2/datastore"
+	datastore_types "github.com/PretendoNetwork/nex-protocols-go/v2/datastore/types"
 )
 
-func SearchObjectLight(err error, client *nex.Client, callID uint32, param *datastore_types.DataStoreSearchParam) uint32 {
+func SearchObjectLight(err error, packet nex.PacketInterface, callID uint32, param datastore_types.DataStoreSearchParam) (*nex.RMCMessage, *nex.Error) {
 	if err != nil {
 		globals.Logger.Error(err.Error())
-		return nex.Errors.DataStore.InvalidArgument
+		return nil, nex.NewError(nex.ResultCodes.DataStore.InvalidArgument, err.Error())
 	}
+
+	connection := packet.Sender()
+	endpoint := connection.Endpoint()
 
 	metaBinaries := make([]*types.MetaBinary, 0)
 
 	if param.SearchTarget == 10 { // * Search for meta binary of this client
-		metaBinary := database.GetMetaBinaryByOwnerPID(client.PID())
+		metaBinary := database.GetMetaBinaryByOwnerPID(uint32(connection.PID()))
 		if metaBinary.DataID != 0 {
 			metaBinaries = append(metaBinaries, metaBinary)
 		}
@@ -29,8 +33,8 @@ func SearchObjectLight(err error, client *nex.Client, callID uint32, param *data
 
 	pSearchResult := datastore_types.NewDataStoreSearchResult()
 
-	pSearchResult.TotalCount = uint32(len(metaBinaries))
-	pSearchResult.Result = make([]*datastore_types.DataStoreMetaInfo, 0, len(metaBinaries))
+	pSearchResult.TotalCount = nex_types.NewUInt32(uint32(len(metaBinaries)))
+	pSearchResult.Result = make([]datastore_types.DataStoreMetaInfo, 0, len(metaBinaries))
 
 	if param.TotalCountEnabled == false {
 		pSearchResult.TotalCountType = 3 // * Disabled
@@ -41,56 +45,49 @@ func SearchObjectLight(err error, client *nex.Client, callID uint32, param *data
 		metaBinary := metaBinaries[i]
 		result := datastore_types.NewDataStoreMetaInfo()
 
-		result.DataID = uint64(metaBinary.DataID)
-		result.OwnerID = metaBinary.OwnerPID
+		result.DataID = nex_types.NewUInt64(uint64(metaBinary.DataID))
+		result.OwnerID = nex_types.NewPID(uint64(metaBinary.OwnerPID))
 		result.Size = 0
-		result.Name = metaBinary.Name
-		result.DataType = metaBinary.DataType
-		result.MetaBinary = metaBinary.Buffer
+		result.Name = nex_types.NewString(metaBinary.Name)
+		result.DataType = nex_types.NewUInt16(metaBinary.DataType)
+		result.MetaBinary = nex_types.NewQBuffer(metaBinary.Buffer)
 		result.Permission = datastore_types.NewDataStorePermission()
-		result.Permission.Permission = metaBinary.Permission
-		result.Permission.RecipientIDs = make([]uint32, 0)
+		result.Permission.Permission = nex_types.NewUInt8(metaBinary.Permission)
+		result.Permission.RecipientIDs = make([]nex_types.PID, 0)
 		result.DelPermission = datastore_types.NewDataStorePermission()
-		result.DelPermission.Permission = metaBinary.DeletePermission
-		result.DelPermission.RecipientIDs = make([]uint32, 0)
+		result.DelPermission.Permission = nex_types.NewUInt8(metaBinary.DeletePermission)
+		result.DelPermission.RecipientIDs = make([]nex_types.PID, 0)
 		result.CreatedTime = metaBinary.CreationTime
 		result.UpdatedTime = metaBinary.UpdatedTime
-		result.Period = metaBinary.Period
+		result.Period = nex_types.NewUInt16(metaBinary.Period)
 		result.Status = 0      // TODO - Figure this out
 		result.ReferredCnt = 0 // TODO - Figure this out
 		result.ReferDataID = 0 // TODO - Figure this out
-		result.Flag = metaBinary.Flag
+		result.Flag = nex_types.NewUInt32(metaBinary.Flag)
 		result.ReferredTime = metaBinary.ReferredTime
 		result.ExpireTime = metaBinary.ExpireTime
-		result.Tags = metaBinary.Tags
-		result.Ratings = make([]*datastore_types.DataStoreRatingInfoWithSlot, 0)
+
+		tags := make([]nex_types.String, len(metaBinaries[i].Tags))
+		for j, tag := range metaBinaries[i].Tags {
+			tags[j] = nex_types.NewString(tag)
+		}
+		result.Tags = tags
+
+		result.Ratings = make([]datastore_types.DataStoreRatingInfoWithSlot, 0)
 
 		pSearchResult.Result = append(pSearchResult.Result, result)
 	}
 
-	rmcResponseStream := nex.NewStreamOut(globals.SecureServer)
+	rmcResponseStream := nex.NewByteStreamOut(globals.SecureServer.LibraryVersions, globals.SecureServer.ByteStreamSettings)
 
-	rmcResponseStream.WriteStructure(pSearchResult)
+	pSearchResult.WriteTo(rmcResponseStream)
 
 	rmcResponseBody := rmcResponseStream.Bytes()
 
-	rmcResponse := nex.NewRMCResponse(datastore.ProtocolID, callID)
-	rmcResponse.SetSuccess(datastore.MethodSearchObjectLight, rmcResponseBody)
+	rmcResponse := nex.NewRMCSuccess(endpoint, rmcResponseBody)
+	rmcResponse.ProtocolID = datastore.ProtocolID
+	rmcResponse.MethodID = datastore.MethodSearchObjectLight
+	rmcResponse.CallID = callID
 
-	rmcResponseBytes := rmcResponse.Bytes()
-
-	responsePacket, _ := nex.NewPacketV1(client, nil)
-
-	responsePacket.SetVersion(1)
-	responsePacket.SetSource(0xA1)
-	responsePacket.SetDestination(0xAF)
-	responsePacket.SetType(nex.DataPacket)
-	responsePacket.SetPayload(rmcResponseBytes)
-
-	responsePacket.AddFlag(nex.FlagNeedsAck)
-	responsePacket.AddFlag(nex.FlagReliable)
-
-	globals.SecureServer.Send(responsePacket)
-
-	return 0
+	return rmcResponse, nil
 }
