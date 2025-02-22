@@ -3,22 +3,26 @@ package nex_service_item_team_kirby_clash_deluxe
 import (
 	"github.com/PretendoNetwork/team-kirby-clash-deluxe/globals"
 
-	"github.com/PretendoNetwork/nex-go"
-	service_item_team_kirby_clash_deluxe "github.com/PretendoNetwork/nex-protocols-go/service-item/team-kirby-clash-deluxe"
-	service_item_team_kirby_clash_deluxe_types "github.com/PretendoNetwork/nex-protocols-go/service-item/team-kirby-clash-deluxe/types"
+	"github.com/PretendoNetwork/nex-go/v2"
+	"github.com/PretendoNetwork/nex-go/v2/types"
+	service_item_team_kirby_clash_deluxe "github.com/PretendoNetwork/nex-protocols-go/v2/service-item/team-kirby-clash-deluxe"
+	service_item_team_kirby_clash_deluxe_types "github.com/PretendoNetwork/nex-protocols-go/v2/service-item/team-kirby-clash-deluxe/types"
 )
 
-func ListServiceItemResponse(err error, client *nex.Client, callID uint32, requestID uint32) uint32 {
+func ListServiceItemResponse(err error, packet nex.PacketInterface, callID uint32, requestID types.UInt32) (*nex.RMCMessage, *nex.Error) {
 	if err != nil {
 		globals.Logger.Error(err.Error())
-		return nex.Errors.ServiceItem.InvalidArgument
+		return nil, nex.NewError(nex.ResultCodes.ServiceItem.InvalidArgument, err.Error())
 	}
+
+	connection := packet.Sender()
+	endpoint := connection.Endpoint()
 
 	// * Stubbed
 	catalog := service_item_team_kirby_clash_deluxe_types.NewServiceItemCatalog()
 	catalog.Balance = service_item_team_kirby_clash_deluxe_types.NewServiceItemAmount()
 
-	nullableCatalog := make([]*service_item_team_kirby_clash_deluxe_types.ServiceItemCatalog, 1)
+	nullableCatalog := make([]service_item_team_kirby_clash_deluxe_types.ServiceItemCatalog, 1)
 	nullableCatalog[0] = catalog
 
 	listServiceItemResponse := service_item_team_kirby_clash_deluxe_types.NewServiceItemListServiceItemResponse()
@@ -27,29 +31,16 @@ func ListServiceItemResponse(err error, client *nex.Client, callID uint32, reque
 	listServiceItemResponse.NullableCatalog = nullableCatalog
 
 	// * Stubbed
-	rmcResponseStream := nex.NewStreamOut(globals.SecureServer)
+	rmcResponseStream := nex.NewByteStreamOut(globals.SecureServer.LibraryVersions, globals.SecureServer.ByteStreamSettings)
 
-	rmcResponseStream.WriteStructure(listServiceItemResponse)
+	listServiceItemResponse.WriteTo(rmcResponseStream)
 
 	rmcResponseBody := rmcResponseStream.Bytes()
 
-	rmcResponse := nex.NewRMCResponse(service_item_team_kirby_clash_deluxe.ProtocolID, callID)
-	rmcResponse.SetSuccess(service_item_team_kirby_clash_deluxe.MethodListServiceItemResponse, rmcResponseBody)
+	rmcResponse := nex.NewRMCSuccess(endpoint, rmcResponseBody)
+	rmcResponse.ProtocolID = service_item_team_kirby_clash_deluxe.ProtocolID
+	rmcResponse.MethodID = service_item_team_kirby_clash_deluxe.MethodListServiceItemResponse
+	rmcResponse.CallID = callID
 
-	rmcResponseBytes := rmcResponse.Bytes()
-
-	responsePacket, _ := nex.NewPacketV1(client, nil)
-
-	responsePacket.SetVersion(1)
-	responsePacket.SetSource(0xA1)
-	responsePacket.SetDestination(0xAF)
-	responsePacket.SetType(nex.DataPacket)
-	responsePacket.SetPayload(rmcResponseBytes)
-
-	responsePacket.AddFlag(nex.FlagNeedsAck)
-	responsePacket.AddFlag(nex.FlagReliable)
-
-	globals.SecureServer.Send(responsePacket)
-
-	return 0
+	return rmcResponse, nil
 }

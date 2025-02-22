@@ -4,18 +4,21 @@ import (
 	"github.com/PretendoNetwork/team-kirby-clash-deluxe/database"
 	"github.com/PretendoNetwork/team-kirby-clash-deluxe/globals"
 
-	"github.com/PretendoNetwork/nex-go"
-	datastore "github.com/PretendoNetwork/nex-protocols-go/datastore"
-	datastore_types "github.com/PretendoNetwork/nex-protocols-go/datastore/types"
+	"github.com/PretendoNetwork/nex-go/v2"
+	datastore "github.com/PretendoNetwork/nex-protocols-go/v2/datastore"
+	datastore_types "github.com/PretendoNetwork/nex-protocols-go/v2/datastore/types"
 )
 
-func PostMetaBinary(err error, client *nex.Client, callID uint32, param *datastore_types.DataStorePreparePostParam) uint32 {
+func PostMetaBinary(err error, packet nex.PacketInterface, callID uint32, param datastore_types.DataStorePreparePostParam) (*nex.RMCMessage, *nex.Error) {
 	if err != nil {
 		globals.Logger.Error(err.Error())
-		return nex.Errors.DataStore.InvalidArgument
+		return nil, nex.NewError(nex.ResultCodes.DataStore.InvalidArgument, err.Error())
 	}
 
-	metaBinary := database.GetMetaBinaryByOwnerPID(client.PID())
+	connection := packet.Sender()
+	endpoint := connection.Endpoint()
+
+	metaBinary := database.GetMetaBinaryByOwnerPID(uint32(connection.PID()))
 
 	// * Meta binary already exists
 	if metaBinary.DataID != 0 && param.PersistenceInitParam.DeleteLastObject {
@@ -23,39 +26,26 @@ func PostMetaBinary(err error, client *nex.Client, callID uint32, param *datasto
 		err = database.DeleteMetaBinaryByDataID(metaBinary.DataID)
 		if err != nil {
 			globals.Logger.Critical(err.Error())
-			return nex.Errors.DataStore.Unknown
+			return nil, nex.NewError(nex.ResultCodes.DataStore.Unknown, err.Error())
 		}
 	}
 
-	dataID, err := database.InsertMetaBinaryByDataStorePreparePostParamWithOwnerPID(param, client.PID())
+	dataID, err := database.InsertMetaBinaryByDataStorePreparePostParamWithOwnerPID(param, uint32(connection.PID()))
 	if err != nil {
 		globals.Logger.Critical(err.Error())
-		return nex.Errors.DataStore.Unknown
+		return nil, nex.NewError(nex.ResultCodes.DataStore.Unknown, err.Error())
 	}
 
-	rmcResponseStream := nex.NewStreamOut(globals.SecureServer)
+	rmcResponseStream := nex.NewByteStreamOut(globals.SecureServer.LibraryVersions, globals.SecureServer.ByteStreamSettings)
 
 	rmcResponseStream.WriteUInt64LE(uint64(dataID))
 
 	rmcResponseBody := rmcResponseStream.Bytes()
 
-	rmcResponse := nex.NewRMCResponse(datastore.ProtocolID, callID)
-	rmcResponse.SetSuccess(datastore.MethodPreparePostObject, rmcResponseBody)
+	rmcResponse := nex.NewRMCSuccess(endpoint, rmcResponseBody)
+	rmcResponse.ProtocolID = datastore.ProtocolID
+	rmcResponse.MethodID = datastore.MethodPostMetaBinary
+	rmcResponse.CallID = callID
 
-	rmcResponseBytes := rmcResponse.Bytes()
-
-	responsePacket, _ := nex.NewPacketV1(client, nil)
-
-	responsePacket.SetVersion(1)
-	responsePacket.SetSource(0xA1)
-	responsePacket.SetDestination(0xAF)
-	responsePacket.SetType(nex.DataPacket)
-	responsePacket.SetPayload(rmcResponseBytes)
-
-	responsePacket.AddFlag(nex.FlagNeedsAck)
-	responsePacket.AddFlag(nex.FlagReliable)
-
-	globals.SecureServer.Send(responsePacket)
-
-	return 0
+	return rmcResponse, nil
 }

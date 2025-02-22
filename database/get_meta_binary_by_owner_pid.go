@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/PretendoNetwork/nex-go"
+	nex_types "github.com/PretendoNetwork/nex-go/v2/types"
 	"github.com/PretendoNetwork/team-kirby-clash-deluxe/globals"
 	"github.com/PretendoNetwork/team-kirby-clash-deluxe/types"
 	"github.com/lib/pq"
@@ -13,10 +13,10 @@ import (
 func GetMetaBinaryByOwnerPID(pid uint32) *types.MetaBinary {
 	metaBinary := types.NewMetaBinary()
 
-	metaBinary.CreationTime = nex.NewDateTime(0)
-	metaBinary.UpdatedTime = nex.NewDateTime(0)
-	metaBinary.ReferredTime = nex.NewDateTime(0)
-	metaBinary.ExpireTime = nex.NewDateTime(0)
+	metaBinary.CreationTime = nex_types.NewDateTime(0)
+	metaBinary.UpdatedTime = nex_types.NewDateTime(0)
+	metaBinary.ReferredTime = nex_types.NewDateTime(0)
+	metaBinary.ExpireTime = nex_types.NewDateTime(0)
 
 	var creationTimestamp int64
 	var updatedTimestamp int64
@@ -65,10 +65,10 @@ func GetMetaBinaryByOwnerPID(pid uint32) *types.MetaBinary {
 	}
 
 	if err == nil {
-		_ = metaBinary.CreationTime.FromTimestamp(time.Unix(creationTimestamp, 0))
-		_ = metaBinary.UpdatedTime.FromTimestamp(time.Unix(updatedTimestamp, 0))
-		_ = metaBinary.ReferredTime.FromTimestamp(time.Unix(referredTimestamp, 0))
-		_ = metaBinary.ExpireTime.FromTimestamp(time.Unix(expireTimestamp, 0))
+		metaBinary.CreationTime.FromTimestamp(time.Unix(creationTimestamp, 0))
+		metaBinary.UpdatedTime.FromTimestamp(time.Unix(updatedTimestamp, 0))
+		metaBinary.ReferredTime.FromTimestamp(time.Unix(referredTimestamp, 0))
+		metaBinary.ExpireTime.FromTimestamp(time.Unix(expireTimestamp, 0))
 	}
 
 	return metaBinary

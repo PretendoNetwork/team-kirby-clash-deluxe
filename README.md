@@ -84,13 +84,12 @@ All configuration options are handled via environment variables
 
 `.env` files are supported
 
-| Name                                 | Description                                                                                                            | Required                                      |
-|--------------------------------------|------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------|
-| `PN_TKCD_POSTGRES_URI`               | Fully qualified URI to your Postgres server (Example `postgres://username:password@localhost/tkcd?sslmode=disable`)    | Yes                                           |
-| `PN_TKCD_KERBEROS_PASSWORD`          | Password used as part of the internal server data in Kerberos tickets                                                  | No (Default password `password` will be used) |
-| `PN_TKCD_AUTHENTICATION_SERVER_PORT` | Port for the authentication server                                                                                     | Yes                                           |
-| `PN_TKCD_SECURE_SERVER_HOST`         | Host name for the secure server (should point to the same address as the authentication server)                        | Yes                                           |
-| `PN_TKCD_SECURE_SERVER_PORT`         | Port for the secure server                                                                                             | Yes                                           |
-| `PN_TKCD_ACCOUNT_GRPC_HOST`          | Host name for your account server gRPC service                                                                         | Yes                                           |
-| `PN_TKCD_ACCOUNT_GRPC_PORT`          | Port for your account server gRPC service                                                                              | Yes                                           |
-| `PN_TKCD_ACCOUNT_GRPC_API_KEY`       | API key for your account server gRPC service                                                                           | No (Assumed to be an open gRPC API)           |
+| Name                                 | Description                                                                                                         | Required                            |
+|--------------------------------------|---------------------------------------------------------------------------------------------------------------------|-------------------------------------|
+| `PN_TKCD_POSTGRES_URI`               | Fully qualified URI to your Postgres server (Example `postgres://username:password@localhost/tkcd?sslmode=disable`) | Yes                                 |
+| `PN_TKCD_AUTHENTICATION_SERVER_PORT` | Port for the authentication server                                                                                  | Yes                                 |
+| `PN_TKCD_SECURE_SERVER_HOST`         | Host name for the secure server (should point to the same address as the authentication server)                     | Yes                                 |
+| `PN_TKCD_SECURE_SERVER_PORT`         | Port for the secure server                                                                                          | Yes                                 |
+| `PN_TKCD_ACCOUNT_GRPC_HOST`          | Host name for your account server gRPC service                                                                      | Yes                                 |
+| `PN_TKCD_ACCOUNT_GRPC_PORT`          | Port for your account server gRPC service                                                                           | Yes                                 |
+| `PN_TKCD_ACCOUNT_GRPC_API_KEY`       | API key for your account server gRPC service                                                                        | No (Assumed to be an open gRPC API) |
